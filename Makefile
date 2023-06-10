@@ -1,0 +1,2 @@
+tidy:
+	go env GOROOT
