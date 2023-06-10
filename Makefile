@@ -1,2 +1,3 @@
-tidy:
-	go env GOROOT
+.PHONY: run
+run:
+	go run ./cmd/api
