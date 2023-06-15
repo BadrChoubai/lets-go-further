@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Retrieve the "id" URL parameter from the current request context, then convert it to
@@ -46,41 +47,71 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any, h
 }
 
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
-	err := json.NewDecoder(r.Body).Decode(dst)
+	// Request may be a maximum of 1MB
+	const MAX_BYTES = 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(MAX_BYTES))
 
-	var syntaxError *json.SyntaxError
-	var unmarshalTypeError *json.UnmarshalTypeError
-	var invalidUnmarshalError *json.InvalidUnmarshalError
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
 
-	switch {
-	case errors.As(err, &syntaxError):
-		return fmt.Errorf(
-			"JSON Body: contains malformed JSON (at character %d)",
-			syntaxError.Offset,
-		)
+	err := dec.Decode(dst)
+	if err != nil {
+		var syntaxError *json.SyntaxError
+		var unmarshalTypeError *json.UnmarshalTypeError
+		var invalidUnmarshalError *json.InvalidUnmarshalError
+		var maxBytesError *http.MaxBytesError
 
-	case errors.As(err, &unmarshalTypeError):
-		if unmarshalTypeError.Field != "" {
+		switch {
+		case errors.As(err, &syntaxError):
 			return fmt.Errorf(
-				"JSON  Body: contains incorrect JSON type (T: %q) for field %q",
-				unmarshalTypeError.Type, unmarshalTypeError.Field,
+				"JSON Body: contains malformed JSON (at character %d)",
+				syntaxError.Offset,
 			)
+
+		case errors.As(err, &unmarshalTypeError):
+			if unmarshalTypeError.Field != "" {
+				return fmt.Errorf(
+					"JSON  Body: contains incorrect JSON type (T: %q) for field %q",
+					unmarshalTypeError.Type, unmarshalTypeError.Field,
+				)
+			}
+			return fmt.Errorf(
+				"JSON Body: contains incorrect JSON type (at character %q)",
+				unmarshalTypeError.Offset,
+			)
+
+		case errors.As(err, &maxBytesError):
+			return fmt.Errorf(
+				"JSON Body: May not be larger then %d bytes",
+				maxBytesError.Limit,
+			)
+
+		case strings.HasPrefix(err.Error(), "json: unknown field"):
+			fieldName := strings.TrimPrefix(err.Error(), "json: unknown field")
+			return fmt.Errorf(
+				"JSON Body: contains unknown key %s",
+				fieldName,
+			)
+		case errors.Is(err, io.ErrUnexpectedEOF):
+			return fmt.Errorf("JSON Body: contains malformed JSON")
+
+		case errors.Is(err, io.EOF):
+			return fmt.Errorf("JSON Body: must not be empty")
+
+		case errors.As(err, &invalidUnmarshalError):
+			panic(err)
+
+		default:
+			return err
 		}
-		return fmt.Errorf(
-			"JSON Body: contains incorrect JSON type (at character %q)",
-			unmarshalTypeError.Offset,
-		)
-
-	case errors.As(err, &invalidUnmarshalError):
-		panic(err)
-
-	case errors.Is(err, io.ErrUnexpectedEOF):
-		return fmt.Errorf("JSON Body: contains malformed JSON")
-
-	case errors.Is(err, io.EOF):
-		return fmt.Errorf("JSON Body: must not be empty")
-
-	default:
-		return err
 	}
+
+	err = dec.Decode(&struct{}{})
+	if err != nil {
+		return errors.New(
+			"request body: Must only contain a single JSON object",
+		)
+	}
+
+	return nil
 }
