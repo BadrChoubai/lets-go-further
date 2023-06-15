@@ -55,5 +55,4 @@ func main() {
 	logger.Printf("starting %s server on http://127.0.0.1%s", config.env, server.Addr)
 	err := server.ListenAndServe()
 	logger.Fatal(err)
-
 }
