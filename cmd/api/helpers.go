@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -41,5 +43,44 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any, h
 	w.Write(JSON)
 
 	return nil
+}
 
+func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+	err := json.NewDecoder(r.Body).Decode(dst)
+
+	var syntaxError *json.SyntaxError
+	var unmarshalTypeError *json.UnmarshalTypeError
+	var invalidUnmarshalError *json.InvalidUnmarshalError
+
+	switch {
+	case errors.As(err, &syntaxError):
+		return fmt.Errorf(
+			"JSON Body: contains malformed JSON (at character %d)",
+			syntaxError.Offset,
+		)
+
+	case errors.As(err, &unmarshalTypeError):
+		if unmarshalTypeError.Field != "" {
+			return fmt.Errorf(
+				"JSON  Body: contains incorrect JSON type (T: %q) for field %q",
+				unmarshalTypeError.Type, unmarshalTypeError.Field,
+			)
+		}
+		return fmt.Errorf(
+			"JSON Body: contains incorrect JSON type (at character %q)",
+			unmarshalTypeError.Offset,
+		)
+
+	case errors.As(err, &invalidUnmarshalError):
+		panic(err)
+
+	case errors.Is(err, io.ErrUnexpectedEOF):
+		return fmt.Errorf("JSON Body: contains malformed JSON")
+
+	case errors.Is(err, io.EOF):
+		return fmt.Errorf("JSON Body: must not be empty")
+
+	default:
+		return err
+	}
 }
