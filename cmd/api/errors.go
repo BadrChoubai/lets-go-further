@@ -40,6 +40,6 @@ func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request)
 }
 
 func (app *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
-	message := fmt.Sprintf("Method: '%s', is not supported for this request")
+	message := fmt.Sprintf("Method: '%s', is not supported for this request", r.Method)
 	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
