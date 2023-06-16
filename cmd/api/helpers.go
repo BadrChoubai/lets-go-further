@@ -29,7 +29,7 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *application) readQueryStringValue(qs url.Values, key, defaultValue string) string {
+func (app *application) readStringValue(qs url.Values, key, defaultValue string) string {
 	val := qs.Get(key)
 
 	if val == "" {

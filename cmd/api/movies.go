@@ -8,8 +8,35 @@ import (
 	"net/http"
 )
 
-// Add a createMovieHandler for the "POST /v1/movies" endpoint. For now we simply
-// return a plain-text placeholder response.
+func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+	var qsValues struct {
+		Title    string
+		Genres   []string
+		Page     int
+		PageSize int
+		Sort     string
+	}
+
+	v := validator.New()
+	qs := r.URL.Query()
+
+	// Data values
+	qsValues.Title = app.readStringValue(qs, "title", "")
+	qsValues.Genres = app.readCSV(qs, "genres", []string{})
+
+	// Paging values
+	qsValues.Page = app.readInt(qs, "page", 1, v)
+	qsValues.PageSize = app.readInt(qs, "page_size", 20, v)
+	qsValues.Sort = app.readStringValue(qs, "sort", "id")
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", qsValues)
+}
+
 func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Title   string       `json:"title"`

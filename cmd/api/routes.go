@@ -18,6 +18,7 @@ func (app *application) routes() *httprouter.Router {
 	// http.MethodPost are constants which equate to the strings "GET" and "POST"
 	// respectively.
 	router.HandlerFunc(http.MethodGet, "/api/healthcheck", app.healthcheckHandler)
+	router.HandlerFunc(http.MethodGet, "/api/v1/movies", app.listMoviesHandler)
 	router.HandlerFunc(http.MethodPost, "/api/v1/movies", app.createMovieHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/movies/:id", app.showMovieHandler)
 	router.HandlerFunc(http.MethodPatch, "/api/v1/movies/:id", app.updateMovieHandler)
