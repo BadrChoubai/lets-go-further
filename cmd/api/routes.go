@@ -20,6 +20,7 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, "/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/api/v1/movies", app.createMovieHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/movies/:id", app.showMovieHandler)
+	router.HandlerFunc(http.MethodPut, "/api/v1/movies/:id", app.updateMovieHandler)
 
 	// Return the httprouter instance.
 	return router
