@@ -1,18 +1,42 @@
 package data
 
 import (
+	"database/sql"
+	"errors"
 	"greenlight.badrchoubai.dev/internal/validator"
 	"time"
 )
 
-type Movie struct {
-	ID        int64     `json:"id"`
-	CreatedAt time.Time `json:"-"`
-	Title     string    `json:"title"`
-	Year      int32     `json:"year,omitempty"`
-	Runtime   Runtime   `json:"runtime,omitempty"`
-	Genres    []string  `json:"genres,omitempty"`
-	Version   int32     `json:"-"`
+var (
+	ErrRecordNotFound = errors.New("record not found")
+)
+
+type (
+	Movie struct {
+		ID        int64     `json:"id"`
+		CreatedAt time.Time `json:"-"`
+		Title     string    `json:"title"`
+		Year      int32     `json:"year,omitempty"`
+		Runtime   Runtime   `json:"runtime,omitempty"`
+		Genres    []string  `json:"genres,omitempty"`
+		Version   int32     `json:"-"`
+	}
+
+	MovieModel struct {
+		DB *sql.DB
+	}
+
+	Models struct {
+		Movies MovieModel
+	}
+)
+
+func NewModels(db *sql.DB) Models {
+	return Models{
+		Movies: MovieModel{
+			DB: db,
+		},
+	}
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {

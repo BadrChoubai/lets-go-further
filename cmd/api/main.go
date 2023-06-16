@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"greenlight.badrchoubai.dev/internal/data"
 	"log"
 	"net/http"
 	"os"
@@ -40,6 +41,7 @@ type (
 	application struct {
 		appConfig config
 		log       *log.Logger
+		models    data.Models
 	}
 )
 
@@ -71,6 +73,7 @@ func main() {
 	application := &application{
 		appConfig: config,
 		log:       logger,
+		models:    data.NewModels(db),
 	}
 
 	server := &http.Server{
