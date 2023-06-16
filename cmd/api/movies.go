@@ -34,13 +34,13 @@ func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	movies, err := app.models.Movies.GetAll(qsValues.Title, qsValues.Genres, qsValues.Filters)
+	movies, metadata, err := app.models.Movies.GetAll(qsValues.Title, qsValues.Genres, qsValues.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"metadata": metadata, "movies": movies}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
