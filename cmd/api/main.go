@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"greenlight.badrchoubai.dev/internal/data"
+	"greenlight.badrchoubai.dev/internal/jsonlog"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +41,7 @@ type (
 
 	application struct {
 		appConfig config
-		log       *log.Logger
+		log       *jsonlog.Logger
 		models    data.Models
 	}
 )
@@ -59,16 +60,16 @@ func main() {
 
 	flag.Parse()
 
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	db, err := openDb(config)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 
 	defer db.Close()
 
-	logger.Printf("PSQL: connection pool established")
+	logger.PrintInfo("database: connection pool established", nil)
 
 	application := &application{
 		appConfig: config,
@@ -79,15 +80,23 @@ func main() {
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", config.port),
 		Handler:      application.routes(),
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
+	logger.PrintInfo("server running", map[string]string{
+		"host":        "127.0.0.1",
+		"port":        server.Addr,
+		"base_url":    "http://127.0.0.1:4000",
+		"environment": config.env,
+		"healthcheck": "http://127.0.0.1:4000/api/healthcheck",
+	})
+
 	// Start the HTTP server.
-	logger.Printf("starting %s server on http://127.0.0.1%s", config.env, server.Addr)
 	err = server.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 func openDb(cfg config) (*sql.DB, error) {
