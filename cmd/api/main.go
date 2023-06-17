@@ -15,16 +15,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// Declare a string containing the application version number. Later in the book we'll
-// generate this automatically at build time, but for now we'll just store the version
-// number as a hard-coded global constant.
 const version = "1.0.0"
 
-// Define a config struct to hold all the configuration settings for our application.
-// For now, the only configuration settings will be the network port that we want the
-// server to listen on, and the name of the current operating environment for the
-// application (development, staging, production, etc.). We will read in these
-// configuration settings from command-line flags when the application starts.
 type (
 	connectionPoolSettings struct {
 		dsn          string
@@ -33,10 +25,17 @@ type (
 		maxIdleTime  string
 	}
 
+	rateLimiterSettings struct {
+		rps     float64
+		burst   int
+		enabled bool
+	}
+
 	config struct {
-		port int
-		env  string
-		db   connectionPoolSettings
+		port    int
+		env     string
+		db      connectionPoolSettings
+		limiter rateLimiterSettings
 	}
 
 	application struct {
@@ -57,6 +56,11 @@ func main() {
 	flag.IntVar(&config.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&config.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&config.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+
+	// Setup Rate Limiter Settings
+	flag.Float64Var(&config.limiter.rps, "limiter-rps", 2, "Rate limiter: maximum requests per second")
+	flag.IntVar(&config.limiter.burst, "limiter-burst", 4, "Rate limiter: maximum burst")
+	flag.BoolVar(&config.limiter.enabled, "limiter-enabled", true, "Rate limiter: enabled or disabled")
 
 	flag.Parse()
 
