@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -17,6 +20,19 @@ func (application *application) serve() error {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+		s := <-quit
+
+		application.log.PrintInfo("caught signal", map[string]string{
+			"signal": s.String(),
+		})
+
+		os.Exit(0)
+	}()
 
 	application.log.PrintInfo("server running", map[string]string{
 		"host":        "127.0.0.1",
