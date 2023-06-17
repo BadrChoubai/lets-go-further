@@ -26,10 +26,6 @@ type (
 		Version   int32     `json:"-"`
 	}
 
-	MovieModel struct {
-		DB *sql.DB
-	}
-
 	IMovieModel interface {
 		Insert(movie *Movie) error
 		Get(id int64) (*Movie, error)
@@ -37,19 +33,7 @@ type (
 		Update(movie *Movie) error
 		Delete(id int64) error
 	}
-
-	Models struct {
-		Movies MovieModel
-	}
 )
-
-func NewModels(db *sql.DB) Models {
-	return Models{
-		Movies: MovieModel{
-			DB: db,
-		},
-	}
-}
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
 	v.Check(movie.Title != "", "title", "must be provided")

@@ -69,9 +69,7 @@ func (application *application) serve() error {
 	application.log.PrintInfo("server stopped", map[string]string{
 		"host":        "127.0.0.1",
 		"port":        server.Addr,
-		"base_url":    "http://127.0.0.1:4000",
 		"environment": application.config.env,
-		"healthcheck": "http://127.0.0.1:4000/api/healthcheck",
 	})
 
 	return nil
