@@ -20,7 +20,7 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	response := envelope{"health": &HealthCheckResponse{
 		Status: "available",
 		SystemInfo: SystemInfo{
-			Environment: app.appConfig.env,
+			Environment: app.config.env,
 			Version:     version,
 		},
 	}}

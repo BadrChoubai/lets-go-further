@@ -4,11 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"greenlight.badrchoubai.dev/internal/data"
 	"greenlight.badrchoubai.dev/internal/jsonlog"
-	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -39,9 +36,9 @@ type (
 	}
 
 	application struct {
-		appConfig config
-		log       *jsonlog.Logger
-		models    data.Models
+		config config
+		log    *jsonlog.Logger
+		models data.Models
 	}
 )
 
@@ -76,30 +73,13 @@ func main() {
 	logger.PrintInfo("database: connection pool established", nil)
 
 	application := &application{
-		appConfig: config,
-		log:       logger,
-		models:    data.NewModels(db),
+		config: config,
+		log:    logger,
+		models: data.NewModels(db),
 	}
-
-	server := &http.Server{
-		Addr:         fmt.Sprintf(":%d", config.port),
-		Handler:      application.routes(),
-		ErrorLog:     log.New(logger, "", 0),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
-	logger.PrintInfo("server running", map[string]string{
-		"host":        "127.0.0.1",
-		"port":        server.Addr,
-		"base_url":    "http://127.0.0.1:4000",
-		"environment": config.env,
-		"healthcheck": "http://127.0.0.1:4000/api/healthcheck",
-	})
 
 	// Start the HTTP server.
-	err = server.ListenAndServe()
+	err = application.serve()
 	logger.PrintFatal(err, nil)
 }
 

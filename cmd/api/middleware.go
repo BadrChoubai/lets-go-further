@@ -60,8 +60,8 @@ func (app *application) rateLimiter(next http.Handler) http.Handler {
 		if _, found := clients[ip]; !found {
 			clients[ip] = &client{
 				limiter: rate.NewLimiter(
-					rate.Limit(app.appConfig.limiter.rps),
-					app.appConfig.limiter.burst,
+					rate.Limit(app.config.limiter.rps),
+					app.config.limiter.burst,
 				),
 			}
 		}
