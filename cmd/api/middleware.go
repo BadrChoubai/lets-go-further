@@ -24,7 +24,7 @@ import (
 //}
 
 // IP Capturing Limiter
-func (app *application) rateLimiter(next http.Handler) http.Handler {
+func (application *application) rateLimiter(next http.Handler) http.Handler {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -52,7 +52,7 @@ func (app *application) rateLimiter(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			app.serverErrorResponse(w, r, err)
+			application.serverErrorResponse(w, r, err)
 			return
 		}
 
@@ -60,8 +60,8 @@ func (app *application) rateLimiter(next http.Handler) http.Handler {
 		if _, found := clients[ip]; !found {
 			clients[ip] = &client{
 				limiter: rate.NewLimiter(
-					rate.Limit(app.config.limiter.rps),
-					app.config.limiter.burst,
+					rate.Limit(application.config.limiter.rps),
+					application.config.limiter.burst,
 				),
 			}
 		}
@@ -69,7 +69,7 @@ func (app *application) rateLimiter(next http.Handler) http.Handler {
 
 		if !clients[ip].limiter.Allow() {
 			mu.Unlock()
-			app.rateLimitExceededResponse(w, r)
+			application.rateLimitExceededResponse(w, r)
 			return
 		}
 
@@ -79,12 +79,12 @@ func (app *application) rateLimiter(next http.Handler) http.Handler {
 	})
 }
 
-func (app *application) recoverPanic(next http.Handler) http.Handler {
+func (application *application) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "close")
-				app.serverErrorResponse(w, r, fmt.Errorf("%s", err))
+				application.serverErrorResponse(w, r, fmt.Errorf("%s", err))
 			}
 		}()
 

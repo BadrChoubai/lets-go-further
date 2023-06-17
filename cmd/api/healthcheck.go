@@ -16,17 +16,17 @@ type HealthCheckResponse struct {
 
 // Declare a handler which writes a plain-text response with information about the
 // application status, operating environment and version.
-func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+func (application *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	response := envelope{"health": &HealthCheckResponse{
 		Status: "available",
 		SystemInfo: SystemInfo{
-			Environment: app.config.env,
+			Environment: application.config.env,
 			Version:     version,
 		},
 	}}
 
-	err := app.writeJSON(w, http.StatusOK, response, nil)
+	err := application.writeJSON(w, http.StatusOK, response, nil)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		application.serverErrorResponse(w, r, err)
 	}
 }

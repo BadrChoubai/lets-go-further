@@ -18,7 +18,7 @@ type envelope map[string]any
 
 // Retrieve the "id" URL parameter from the current request context, then convert it to
 // an integer and return it. If the operation isn't successful, return 0 and an error.
-func (app *application) readIDParam(r *http.Request) (int64, error) {
+func (application *application) readIDParam(r *http.Request) (int64, error) {
 	params := httprouter.ParamsFromContext(r.Context())
 
 	id, err := strconv.ParseInt(params.ByName("id"), 10, 64)
@@ -29,7 +29,7 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *application) readStringValue(qs url.Values, key, defaultValue string) string {
+func (application *application) readStringValue(qs url.Values, key, defaultValue string) string {
 	val := qs.Get(key)
 
 	if val == "" {
@@ -39,7 +39,7 @@ func (app *application) readStringValue(qs url.Values, key, defaultValue string)
 	return val
 }
 
-func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+func (application *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
 	csv := qs.Get(key)
 
 	if csv == "" {
@@ -49,7 +49,7 @@ func (app *application) readCSV(qs url.Values, key string, defaultValue []string
 	return strings.Split(csv, ",")
 }
 
-func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+func (application *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
 	s := qs.Get(key)
 
 	if s == "" {
@@ -63,7 +63,7 @@ func (app *application) readInt(qs url.Values, key string, defaultValue int, v *
 	return i
 }
 
-func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
+func (application *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
 	JSON, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data any, h
 	return nil
 }
 
-func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
+func (application *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 	// Request may be a maximum of 1MB
 	const MAX_BYTES = 1_048_576
 	r.Body = http.MaxBytesReader(w, r.Body, int64(MAX_BYTES))
