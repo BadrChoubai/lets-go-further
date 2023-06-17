@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,9 +23,10 @@ func (application *application) serve() error {
 		WriteTimeout: 10 * time.Second,
 	}
 
+	shutdownError := make(chan error)
+
 	go func() {
 		quit := make(chan os.Signal, 1)
-
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
@@ -31,10 +34,21 @@ func (application *application) serve() error {
 			"signal": s.String(),
 		})
 
-		os.Exit(0)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		err := server.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+		}
+		application.log.PrintInfo("completing background tasks", map[string]string{
+			"addr": server.Addr,
+		})
+
+		shutdownError <- nil
 	}()
 
-	application.log.PrintInfo("server running", map[string]string{
+	application.log.PrintInfo("server starting", map[string]string{
 		"host":        "127.0.0.1",
 		"port":        server.Addr,
 		"base_url":    "http://127.0.0.1:4000",
@@ -42,6 +56,23 @@ func (application *application) serve() error {
 		"healthcheck": "http://127.0.0.1:4000/api/healthcheck",
 	})
 
-	// Start the server as normal, returning any error.
-	return server.ListenAndServe()
+	err := server.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+
+	err = <-shutdownError
+	if err != nil {
+		return err
+	}
+
+	application.log.PrintInfo("server stopped", map[string]string{
+		"host":        "127.0.0.1",
+		"port":        server.Addr,
+		"base_url":    "http://127.0.0.1:4000",
+		"environment": application.config.env,
+		"healthcheck": "http://127.0.0.1:4000/api/healthcheck",
+	})
+
+	return nil
 }

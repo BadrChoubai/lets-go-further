@@ -46,6 +46,7 @@ func main() {
 	var config config
 
 	flag.IntVar(&config.port, "port", 4000, "API server port")
+
 	flag.StringVar(&config.env, "env", "development", "Environment (development|staging|production)")
 
 	// Setup DB Connection Pool
@@ -80,7 +81,9 @@ func main() {
 
 	// Start the HTTP server.
 	err = application.serve()
-	logger.PrintFatal(err, nil)
+	if err != nil {
+		application.log.PrintFatal(err, nil)
+	}
 }
 
 func openDb(cfg config) (*sql.DB, error) {
