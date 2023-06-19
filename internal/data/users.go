@@ -12,6 +12,7 @@ import (
 
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
+	AnonymousUser     = &User{}
 )
 
 type (
@@ -37,6 +38,10 @@ type (
 		Update(user *User) error
 	}
 )
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
+}
 
 func (model UserModel) Insert(user *User) error {
 	query := `
