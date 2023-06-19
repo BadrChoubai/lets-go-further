@@ -33,7 +33,7 @@ func (r *Runtime) UnmarshalJSON(jsonValue []byte) error {
 	return nil
 }
 
-func (r Runtime) MarshalJSON() ([]byte, error) {
+func (r *Runtime) MarshalJSON() ([]byte, error) {
 	jsonValue := fmt.Sprintf("%d mins", r)
 
 	quotedJSONValue := strconv.Quote(jsonValue)
