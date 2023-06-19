@@ -23,6 +23,7 @@ func (application *application) routes() http.Handler {
 
 	// User Routes
 	router.HandlerFunc(http.MethodPost, "/users", application.registerUserHandler)
+	router.HandlerFunc(http.MethodPut, "/users/activate", application.activateUserHandler)
 
 	return application.recoverPanic(application.rateLimiter(router))
 }
