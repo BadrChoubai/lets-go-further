@@ -84,8 +84,8 @@ func (application *application) writeJSON(w http.ResponseWriter, status int, dat
 
 func (application *application) readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 	// Request may be a maximum of 1MB
-	const MAX_BYTES = 1_048_576
-	r.Body = http.MaxBytesReader(w, r.Body, int64(MAX_BYTES))
+	const MaxBytes = 1_048_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(MaxBytes))
 
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()

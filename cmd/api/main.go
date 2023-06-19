@@ -64,7 +64,7 @@ func main() {
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
-	db, err := openDb(config)
+	db, err := openDB(config)
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
@@ -86,7 +86,7 @@ func main() {
 	}
 }
 
-func openDb(cfg config) (*sql.DB, error) {
+func openDB(cfg config) (*sql.DB, error) {
 	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
 		return nil, err

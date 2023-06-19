@@ -7,16 +7,16 @@ import (
 	"net/http"
 )
 
-func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+func (application *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	err := app.readJSON(w, r, &input)
+	err := application.readJSON(w, r, &input)
 	if err != nil {
-		app.badRequestResponse(w, r, err)
+		application.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -28,30 +28,30 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 
 	err = user.Password.Set(input.Password)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		application.serverErrorResponse(w, r, err)
 		return
 	}
 
 	v := validator.New()
 	if data.ValidateUser(v, user); !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
+		application.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	err = app.models.Users.Insert(user)
+	err = application.models.Users.Insert(user)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddError("email", "a user with this email already exists")
-			app.failedValidationResponse(w, r, v.Errors)
+			application.failedValidationResponse(w, r, v.Errors)
 		default:
-			app.serverErrorResponse(w, r, err)
+			application.serverErrorResponse(w, r, err)
 		}
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
+	err = application.writeJSON(w, http.StatusOK, envelope{"user": user}, nil)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		application.serverErrorResponse(w, r, err)
 	}
 }
