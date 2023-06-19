@@ -47,6 +47,11 @@ func (application *application) serverErrorResponse(w http.ResponseWriter, r *ht
 	application.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
+func (application *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid authentication credentials"
+	application.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
 func (application *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 	message := fmt.Sprintf("Method: '%s', is not supported for this request", r.Method)
 	application.errorResponse(w, r, http.StatusMethodNotAllowed, message)
