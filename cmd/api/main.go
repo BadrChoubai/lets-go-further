@@ -6,6 +6,7 @@ import (
 	"flag"
 	"greenlight.badrchoubai.dev/internal/data"
 	"greenlight.badrchoubai.dev/internal/jsonlog"
+	"greenlight.badrchoubai.dev/internal/mailer"
 	"os"
 	"time"
 
@@ -28,17 +29,27 @@ type (
 		enabled bool
 	}
 
+	smtpOptions struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
+
 	config struct {
 		port    int
 		env     string
 		db      connectionPoolSettings
 		limiter rateLimiterSettings
+		smtp    smtpOptions
 	}
 
 	application struct {
 		config config
 		log    *jsonlog.Logger
 		models data.Models
+		mailer mailer.Mailer
 	}
 )
 
@@ -60,6 +71,13 @@ func main() {
 	flag.IntVar(&config.limiter.burst, "limiter-burst", 4, "Rate limiter: maximum burst")
 	flag.BoolVar(&config.limiter.enabled, "limiter-enabled", true, "Rate limiter: enabled or disabled")
 
+	// Setup smtp mail server
+	flag.StringVar(&config.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
+	flag.IntVar(&config.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.StringVar(&config.smtp.username, "smtp-username", "4ff9f878683e32", "SMTP username")
+	flag.StringVar(&config.smtp.password, "smtp-password", "3b827122aa06cd", "SMTP password")
+	flag.StringVar(&config.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.badrchoubai.dev>", "SMTP sender")
+
 	flag.Parse()
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
@@ -77,6 +95,13 @@ func main() {
 		config: config,
 		log:    logger,
 		models: data.NewModels(db),
+		mailer: mailer.New(
+			config.smtp.host,
+			config.smtp.port,
+			config.smtp.username,
+			config.smtp.password,
+			config.smtp.sender,
+		),
 	}
 
 	// Start the HTTP server.
