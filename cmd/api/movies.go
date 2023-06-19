@@ -12,7 +12,7 @@ func (application *application) listMoviesHandler(w http.ResponseWriter, r *http
 	var qsValues struct {
 		Title  string
 		Genres []string
-		data.Filters
+		data.FilterOptions
 	}
 
 	v := validator.New()
@@ -23,18 +23,18 @@ func (application *application) listMoviesHandler(w http.ResponseWriter, r *http
 	qsValues.Genres = application.readCSV(qs, "genres", []string{})
 
 	// Pagination values
-	qsValues.Filters.Page = application.readInt(qs, "page", 1, v)
-	qsValues.Filters.PageSize = application.readInt(qs, "page_size", 20, v)
-	qsValues.Filters.Sort = application.readStringValue(qs, "sort", "id")
+	qsValues.FilterOptions.Page = application.readInt(qs, "page", 1, v)
+	qsValues.FilterOptions.PageSize = application.readInt(qs, "page_size", 20, v)
+	qsValues.FilterOptions.Sort = application.readStringValue(qs, "sort", "id")
 
-	qsValues.Filters.SortableValues = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+	qsValues.FilterOptions.SortableValues = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
 
-	if data.ValidateFilters(v, qsValues.Filters); !v.Valid() {
+	if data.ValidateFilters(v, qsValues.FilterOptions); !v.Valid() {
 		application.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	movies, metadata, err := application.models.Movies.GetAll(qsValues.Title, qsValues.Genres, qsValues.Filters)
+	movies, metadata, err := application.models.Movies.GetAll(qsValues.Title, qsValues.Genres, qsValues.FilterOptions)
 	if err != nil {
 		application.serverErrorResponse(w, r, err)
 		return

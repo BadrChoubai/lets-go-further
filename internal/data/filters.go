@@ -7,14 +7,14 @@ import (
 )
 
 type (
-	IFilters interface {
+	Filters interface {
 		sortColumn() string
 		sortDirection() string
 		limit() int
 		offset() int
 	}
 
-	Filters struct {
+	FilterOptions struct {
 		Page           int
 		PageSize       int
 		Sort           string
@@ -22,38 +22,38 @@ type (
 	}
 )
 
-func ValidateFilters(v *validator.Validator, f Filters) {
-	v.Check(f.Page > 0, "page", "must be greater than zero")
-	v.Check(f.Page <= 1000, "page", "must be less than a thousand")
-	v.Check(f.PageSize > 0, "page_size", "must be greater than zero")
-	v.Check(f.PageSize <= 100, "page_size", "must be a maximum of 100")
+func ValidateFilters(v *validator.Validator, filterOpts FilterOptions) {
+	v.Check(filterOpts.Page > 0, "page", "must be greater than zero")
+	v.Check(filterOpts.Page <= 1000, "page", "must be less than a thousand")
+	v.Check(filterOpts.PageSize > 0, "page_size", "must be greater than zero")
+	v.Check(filterOpts.PageSize <= 100, "page_size", "must be a maximum of 100")
 
-	v.Check(validator.PermittedValue(f.Sort, f.SortableValues...), "sort", "invalid sort values")
+	v.Check(validator.PermittedValue(filterOpts.Sort, filterOpts.SortableValues...), "sort", "invalid sort values")
 }
 
-func (f Filters) sortColumn() string {
-	for _, sortableValue := range f.SortableValues {
-		if f.Sort == sortableValue {
-			return strings.TrimPrefix(f.Sort, "-")
+func (filterOpts FilterOptions) sortColumn() string {
+	for _, sortableValue := range filterOpts.SortableValues {
+		if filterOpts.Sort == sortableValue {
+			return strings.TrimPrefix(filterOpts.Sort, "-")
 		}
 	}
-	panic("unsafe sort parameter: " + f.Sort)
+	panic("unsafe sort parameter: " + filterOpts.Sort)
 }
 
-func (f Filters) sortDirection() string {
-	if strings.HasPrefix(f.Sort, "-") {
+func (filterOpts FilterOptions) sortDirection() string {
+	if strings.HasPrefix(filterOpts.Sort, "-") {
 		return "DESC"
 	}
 
 	return "ASC"
 }
 
-func (f Filters) limit() int {
-	return f.PageSize
+func (filterOpts FilterOptions) limit() int {
+	return filterOpts.PageSize
 }
 
-func (f Filters) offset() int {
-	return (f.Page - 1) * f.PageSize
+func (filterOpts FilterOptions) offset() int {
+	return (filterOpts.Page - 1) * filterOpts.PageSize
 }
 
 type (
