@@ -16,6 +16,18 @@ import (
 // Define an envelope type
 type envelope map[string]any
 
+func (application *application) background(backgroundTask func()) {
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				application.log.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+
+		backgroundTask()
+	}()
+}
+
 // Retrieve the "id" URL parameter from the current request context, then convert it to
 // an integer and return it. If the operation isn't successful, return 0 and an error.
 func (application *application) readIDParam(r *http.Request) (int64, error) {

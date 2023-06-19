@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"greenlight.badrchoubai.dev/internal/data"
 	"greenlight.badrchoubai.dev/internal/validator"
 	"net/http"
@@ -51,18 +50,12 @@ func (application *application) registerUserHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	go func() {
+	application.background(func() {
 		err = application.mailer.Send(user.Email, "user_welcome.tmpl", user)
-		defer func() {
-			if err := recover(); err != nil {
-				application.log.PrintError(fmt.Errorf("%s", err), nil)
-			}
-		}()
-
 		if err != nil {
 			application.log.PrintError(err, nil)
 		}
-	}()
+	})
 
 	err = application.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
