@@ -17,7 +17,10 @@ import (
 type envelope map[string]any
 
 func (application *application) background(backgroundTask func()) {
+	application.wg.Add(1)
 	go func() {
+		defer application.wg.Done()
+
 		defer func() {
 			if err := recover(); err != nil {
 				application.log.PrintError(fmt.Errorf("%s", err), nil)

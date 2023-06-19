@@ -8,6 +8,7 @@ import (
 	"greenlight.badrchoubai.dev/internal/jsonlog"
 	"greenlight.badrchoubai.dev/internal/mailer"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -50,6 +51,7 @@ type (
 		log    *jsonlog.Logger
 		models data.Models
 		mailer mailer.Mailer
+		wg     sync.WaitGroup
 	}
 )
 
