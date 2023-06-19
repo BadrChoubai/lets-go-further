@@ -33,8 +33,12 @@ audit:
 
 ## migrate_up: migrate up
 .PHONY: migrate_up
-migrate_up: migrate_down
+migrate_up:
 	migrate -path ./migrations -database ${PRIMARY_DB} up
+
+## migrate_refresh: migrate down/migrate up
+.PHONY: migrate_refresh
+migrate_refresh: migrate_down migrate_up
 
 ## migrate_down: migrate down
 .PHONY: migrate_down
