@@ -5,6 +5,7 @@ import (
 	"greenlight.badrchoubai.dev/internal/data"
 	"greenlight.badrchoubai.dev/internal/validator"
 	"net/http"
+	"time"
 )
 
 func (application *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +51,19 @@ func (application *application) registerUserHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
+	token, err := application.models.Token.New(user.ID, 1*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		application.serverErrorResponse(w, r, err)
+		return
+	}
+
 	application.background(func() {
-		err = application.mailer.Send(user.Email, "user_welcome.tmpl", user)
+		userActivationInfo := map[string]any{
+			"activationToken": token.Plaintext,
+			"userID":          user.ID,
+		}
+
+		err = application.mailer.Send(user.Email, "user_welcome.tmpl", userActivationInfo)
 		if err != nil {
 			application.log.PrintError(err, nil)
 		}
