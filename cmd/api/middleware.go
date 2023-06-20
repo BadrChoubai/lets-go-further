@@ -1,10 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"golang.org/x/time/rate"
+	"greenlight.badrchoubai.dev/internal/data"
+	"greenlight.badrchoubai.dev/internal/validator"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -87,6 +91,50 @@ func (application *application) recoverPanic(next http.Handler) http.Handler {
 				application.serverErrorResponse(w, r, fmt.Errorf("%s", err))
 			}
 		}()
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (application *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Authorization")
+
+		authorizationHeader := r.Header.Get("Authorization")
+
+		if authorizationHeader == "" {
+			r = application.contextSetUser(r, data.AnonymousUser)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		headerParts := strings.Split(authorizationHeader, " ")
+		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+			application.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		token := headerParts[1]
+
+		v := validator.New()
+
+		if data.ValidateTokenPlaintext(v, token); !v.Valid() {
+			application.invalidAuthenticationTokenResponse(w, r)
+			return
+		}
+
+		user, err := application.models.Users.GetForToken(data.ScopeAuthentication, token)
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				application.invalidAuthenticationTokenResponse(w, r)
+			default:
+				application.serverErrorResponse(w, r, err)
+			}
+			return
+		}
+
+		r = application.contextSetUser(r, user)
 
 		next.ServeHTTP(w, r)
 	})

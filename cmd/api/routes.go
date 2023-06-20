@@ -28,5 +28,5 @@ func (application *application) routes() http.Handler {
 	// Token Routes
 	router.HandlerFunc(http.MethodPost, "/tokens/authentication", application.createAuthenticationTokenHandler)
 
-	return application.recoverPanic(application.rateLimiter(router))
+	return application.recoverPanic(application.rateLimiter(application.authenticate(router)))
 }
