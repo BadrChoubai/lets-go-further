@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+func (application *application) authenticationRequiredResponse(w http.ResponseWriter, r *http.Request) {
+	message := "you must be authenticated in order to access this resource"
+	application.errorResponse(w, r, http.StatusUnauthorized, message)
+}
+
 func (application *application) logError(r *http.Request, err error) {
 	application.log.PrintError(err, map[string]string{
 		"request_method": r.Method,
@@ -45,6 +50,11 @@ func (application *application) serverErrorResponse(w http.ResponseWriter, r *ht
 
 	message := "the server encountered a problem and could not process the request"
 	application.errorResponse(w, r, http.StatusInternalServerError, message)
+}
+
+func (application *application) inactiveAccountResponse(w http.ResponseWriter, r *http.Request) {
+	message := "your user account must be activated to access this resource"
+	application.errorResponse(w, r, http.StatusForbidden, message)
 }
 
 func (application *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
