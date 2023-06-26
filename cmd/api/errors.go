@@ -78,3 +78,8 @@ func (application *application) notFoundResponse(w http.ResponseWriter, r *http.
 	message := "the requested resource could not be found"
 	application.errorResponse(w, r, http.StatusInternalServerError, message)
 }
+
+func (application *application) notPermittedResponse(w http.ResponseWriter, r *http.Request) {
+	message := "your user account doesn't have the necessary permissions to access this resource"
+	application.errorResponse(w, r, http.StatusForbidden, message)
+}

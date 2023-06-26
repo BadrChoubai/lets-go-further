@@ -167,3 +167,24 @@ func (application *application) requireActivatedUser(next http.HandlerFunc) http
 
 	return application.requireAuthenticatedUser(fn)
 }
+
+func (application *application) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		user := application.contextGetUser(r)
+
+		permissions, err := application.models.Permissions.GetAllForUser(user.ID)
+		if err != nil {
+			application.serverErrorResponse(w, r, err)
+			return
+		}
+
+		if !permissions.Include(code) {
+			application.notPermittedResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+
+	return application.requireActivatedUser(fn)
+}
