@@ -15,7 +15,7 @@ func (application *application) contextSetUser(r *http.Request, user *data.User)
 	return r.WithContext(ctx)
 }
 
-func (application *application) contextGetUser(r *http.Request, user *data.User) *data.User {
+func (application *application) contextGetUser(r *http.Request) *data.User {
 	user, ok := r.Context().Value(userContextKey).(*data.User)
 	if !ok {
 		panic("missing user value in request context")

@@ -15,11 +15,11 @@ func (application *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/healthcheck", application.healthcheckHandler)
 
 	// API routes
-	router.HandlerFunc(http.MethodGet, "/api/v1/movies", application.listMoviesHandler)
-	router.HandlerFunc(http.MethodPost, "/api/v1/movies", application.createMovieHandler)
-	router.HandlerFunc(http.MethodGet, "/api/v1/movies/:id", application.showMovieHandler)
-	router.HandlerFunc(http.MethodPatch, "/api/v1/movies/:id", application.updateMovieHandler)
-	router.HandlerFunc(http.MethodDelete, "/api/v1/movies/:id", application.deleteMovieHandler)
+	router.HandlerFunc(http.MethodGet, "/api/v1/movies", application.requireActivatedUser(application.listMoviesHandler))
+	router.HandlerFunc(http.MethodPost, "/api/v1/movies", application.requireActivatedUser(application.createMovieHandler))
+	router.HandlerFunc(http.MethodGet, "/api/v1/movies/:id", application.requireActivatedUser(application.showMovieHandler))
+	router.HandlerFunc(http.MethodPatch, "/api/v1/movies/:id", application.requireActivatedUser(application.updateMovieHandler))
+	router.HandlerFunc(http.MethodDelete, "/api/v1/movies/:id", application.requireActivatedUser(application.deleteMovieHandler))
 
 	// User Routes
 	router.HandlerFunc(http.MethodPost, "/users", application.registerUserHandler)
