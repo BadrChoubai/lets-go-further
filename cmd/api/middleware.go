@@ -9,6 +9,7 @@ import (
 	"greenlight.badrchoubai.dev/internal/validator"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -217,21 +218,59 @@ func (application *application) enableCORS(next http.Handler) http.Handler {
 	})
 }
 
+type metricsResponseWriter struct {
+	http.ResponseWriter
+	statusCode    int
+	headerWritten bool
+}
+
+func newMetricsResponseWrite(w http.ResponseWriter) *metricsResponseWriter {
+	return &metricsResponseWriter{
+		ResponseWriter: w,
+		statusCode:     http.StatusOK,
+	}
+}
+
+func (mrw *metricsResponseWriter) Header() http.Header {
+	return mrw.ResponseWriter.Header()
+}
+
+func (mrw *metricsResponseWriter) WriteHeader(statusCode int) {
+	mrw.ResponseWriter.WriteHeader(statusCode)
+	if !mrw.headerWritten {
+		mrw.statusCode = statusCode
+		mrw.headerWritten = true
+	}
+}
+
+func (mrw *metricsResponseWriter) Write(b []byte) (int, error) {
+	mrw.headerWritten = true
+	return mrw.ResponseWriter.Write(b)
+}
+
+func (mrw *metricsResponseWriter) Unwrap() http.ResponseWriter {
+	return mrw.ResponseWriter
+}
+
 func (application *application) metrics(next http.Handler) http.Handler {
 	var (
 		totalRequestsReceived           = expvar.NewInt("total_requests_received")
 		totalResponsesSent              = expvar.NewInt("total_responses_sent")
 		totalProcessingTimeMicroseconds = expvar.NewInt("total_processing_time_μs")
+		totalResponsesSentByStatus      = expvar.NewMap("total_responses_sent_by_status")
 	)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		totalRequestsReceived.Add(1)
+
+		mrw := newMetricsResponseWrite(w)
 		next.ServeHTTP(w, r)
 
 		totalResponsesSent.Add(1)
+		totalResponsesSentByStatus.Add(strconv.Itoa(mrw.statusCode), 1)
+
 		duration := time.Since(start).Microseconds()
 		totalProcessingTimeMicroseconds.Add(duration)
 	})
-
 }
