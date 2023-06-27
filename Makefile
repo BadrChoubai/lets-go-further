@@ -1,65 +1,31 @@
-PRIMARY_DB = ${GREENLIGHT_DB_DSN}
-MAIN_PACKAGE_PATH := ./cmd/api
-BINARY_NAME := greenlight
-
-
 ## help: print this help message
 .PHONY: help
 help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
-## test: run all tests
-.PHONY: test
-test:
-	go test -v -race -buildvcs ./...
+.PHONY: confirm
+confirm:
+	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
+## run/api: run the cmd/api application
+.PHONY: run/api
+run/api:
+	go run ./cmd/api
 
-## tidy: format code and tidy modfile
-.PHONY: tidy
-tidy:
-	go fmt ./...
-	go mod tidy -v
+## db/psql: connect to the database using psql
+.PHONY: db/psql
+db/psql:
+	psql ${GREENLIGHT_DB_DSN}
 
-## audit: run quality control checks
-.PHONY: audit
-audit:
-	go mod verify
-	go vet ./...
-	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
-	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
-	go test -race -buildvcs -vet=off ./...
+## db/migrations/new name=$1: create a new database migration
+.PHONY: db/migrations/new
+db/migrations/new:
+	@echo 'Creating migration files for ${name}...'
+	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
-
-## migrate_up: migrate up
-.PHONY: migrate_up
-migrate_up:
-	migrate -path ./migrations -database ${PRIMARY_DB} up
-
-## migrate_refresh: migrate down/migrate up
-.PHONY: migrate_refresh
-migrate_refresh: migrate_down migrate_up
-
-## migrate_down: migrate down
-.PHONY: migrate_down
-migrate_down:
-	migrate -path ./migrations -database ${PRIMARY_DB} down
-
-## build: build the application
-.PHONY: build
-build:
-	go build -o=/tmp/bin/${BINARY_NAME} ${MAIN_PACKAGE_PATH}
-
-## run: run the  application
-.PHONY: run
-run: build
-	/tmp/bin/${BINARY_NAME}
-
-## run/live: run the application with reloading on file changes
-.PHONY: run/live
-run/live:
-	go run github.com/cosmtrek/air@v1.43.0 \
-		--build.cmd "make build" --build.bin "/tmp/bin/${BINARY_NAME}" --build.delay "100" \
-		--build.exclude_dir "" \
-		--build.include_ext "go, tpl, tmpl, html, css, scss, js, ts, sql, jpeg, jpg, gif, png, bmp, svg, webp, ico" \
-		--misc.clean_on_exit "true"
+## db/migrations/up: apply all up database migrations
+.PHONY: db/migrations/up
+db/migrations/up: confirm
+	@echo 'Running up migrations...'
+	migrate -path ./migrations -database ${GREENLIGHT_DB_DSN} up
