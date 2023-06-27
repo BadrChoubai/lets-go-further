@@ -71,7 +71,7 @@ func main() {
 	flag.StringVar(&config.env, "env", "development", "Environment (development|staging|production)")
 
 	// Setup DB Connection Pool
-	flag.StringVar(&config.db.dsn, "db-dsn", os.Getenv("GREENLIGHT_DB_DSN"), "PostgreSQL DSN")
+	flag.StringVar(&config.db.dsn, "db-dsn", "", "PostgreSQL DSN")
 	flag.IntVar(&config.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&config.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&config.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
