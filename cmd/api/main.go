@@ -9,6 +9,7 @@ import (
 	"greenlight.badrchoubai.dev/internal/data"
 	"greenlight.badrchoubai.dev/internal/jsonlog"
 	"greenlight.badrchoubai.dev/internal/mailer"
+	"greenlight.badrchoubai.dev/internal/vcs"
 	"os"
 	"runtime"
 	"strings"
@@ -18,7 +19,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
+var (
+	version = vcs.Version()
+)
 
 type (
 	connectionPoolSettings struct {
