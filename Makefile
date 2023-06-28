@@ -69,9 +69,31 @@ production_host_ip = '137.184.238.217'
 production/connect:
 	ssh greenlight@${production_host_ip}
 
+## production/ping: ping healthcheck endpoint
+.PHONY: production/ping
+production/ping:
+	curl -Li http://${production_host_ip}/healthcheck
+
+## production/debug/snapshot: create auto-closing ssh tunnel, curl /debug/vars and save its output to file
+.PHONY: production/debug/snapshot
+production/debug/snapshot:
+	mkdir -p ./remote/debug
+	ssh -f -L :9999:${production_host_ip}:4000 greenlight@${production_host_ip} sleep 5; \
+	curl -o ./remote/debug/snapshot.json localhost:9999/debug/vars
+
+## production/deploy/api: request /debug/vars and save output to file
 .PHONY: production/deploy/api
 production/deploy/api:
 	rsync -P ./bin/linux_amd64/api greenlight@${production_host_ip}:~
 	rsync -rP --delete ./migrations greenlight@${production_host_ip}:~
-	ssh -t greenlight@${production_host_ip} 'migrate -path ~/migrations -database $$GREENLIGHT_DB_DSN up'
+	rsync -P ./remote/production/api.service greenlight@${production_host_ip}:~
+	rsync -P ./remote/production/Caddyfile greenlight@${production_host_ip}:~
+	ssh -t greenlight@${production_host_ip} '\
+		migrate -path ~/migrations -database $$GREENLIGHT_DB_DSN up \
+		&& sudo mv ~/api.service /etc/systemd/system/ \
+		&& sudo systemctl enable api \
+		&& sudo systemctl restart api \
+		&& sudo mv ~/Caddyfile /etc/caddy/ \
+		&& sudo systemctl reload caddy \
+	'
 
