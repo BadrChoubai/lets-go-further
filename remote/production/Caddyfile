@@ -1,8 +1,8 @@
 {
-  email choubai.badr@protonmail.com
+  email youremail@example.com
 }
 
-http://greenlight.badrchoubai.dev {
+DO_DROPLET_PUBLIC_IP {
   respond /debug/* "Not Permitted" 403
   reverse_proxy 127.0.0.1:4000
 }

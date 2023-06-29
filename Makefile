@@ -9,7 +9,10 @@ help:
 ## run/api: run the cmd/api application
 .PHONY: run/api
 run/api:
-	@go run ./cmd/api -db-dsn=${GREENLIGHT_DB_DSN}
+	@go run ./cmd/api \
+	-db-dsn=${GREENLIGHT_DB_DSN} \
+	-smtp-USERNAME=${SMTP_USERNAME} \
+	-smtp-password=${SMTP_PASSWORD}
 
 ## db/psql: connect to the database using psql
 .PHONY: db/psql
@@ -62,7 +65,7 @@ build/api:
 	go build -ldflags='-s' -o=./bin/api ./cmd/api
 	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
 
-production_host_ip = '137.184.238.217'
+production_host_ip = 'xxx.xxx.xxx.xxx'
 
 ## production/connect: connect to the production server
 .PHONY: production/connect

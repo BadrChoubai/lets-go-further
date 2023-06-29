@@ -88,8 +88,8 @@ func main() {
 	// Setup smtp mail server
 	flag.StringVar(&config.smtp.host, "smtp-host", "smtp.mailtrap.io", "SMTP host")
 	flag.IntVar(&config.smtp.port, "smtp-port", 25, "SMTP port")
-	flag.StringVar(&config.smtp.username, "smtp-username", "4ff9f878683e32", "SMTP username")
-	flag.StringVar(&config.smtp.password, "smtp-password", "3b827122aa06cd", "SMTP password")
+	flag.StringVar(&config.smtp.username, "smtp-username", "", "SMTP username")
+	flag.StringVar(&config.smtp.password, "smtp-password", "", "SMTP password")
 	flag.StringVar(&config.smtp.sender, "smtp-sender", "Greenlight <no-reply@greenlight.badrchoubai.dev>", "SMTP sender")
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space-separated)", func(origins string) error {

@@ -14,7 +14,7 @@ USERNAME=greenlight
 
 # Prompt to enter a password for the PostgreSQL greenlight user (rather than hard-coding
 # a password in this script).
-read -p "Enter password for greenlight DB user: " DB_PASSWORD
+read -s -p "Enter password for greenlight DB user: " DB_PASSWORD
 
 # Force all output to be presented in en_US for the duration of this script. This avoids
 # any "setting locale failed" errors while this script is running, before we have

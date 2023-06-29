@@ -14,7 +14,10 @@ User=greenlight
 Group=greenlight
 EnvironmentFile=/etc/environment
 WorkingDirectory=/home/greenlight
-ExecStart=/home/greenlight/api -port=4000 -db-dsn=${GREENLIGHT_DB_DSN} -env=production
+ExecStart=/home/greenlight/api \
+  -port=4000 -db-dsn=${GREENLIGHT_DB_DSN} \
+  -env=production -smtp-username=${SMTP_USERNAME} \
+  -smtp-password=${SMTP_PASSWORD}
 
 Restart=on-failure
 RestartSec=5
