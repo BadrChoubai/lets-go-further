@@ -2,5 +2,6 @@
 tmp/
 bin/
 remote/debug/
+lets-go-further/
 
 .envrc
